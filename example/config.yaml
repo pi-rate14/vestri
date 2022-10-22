@@ -2,11 +2,13 @@
 services:
   - name: "test service"
     matcher: "/api/v1"
+    strategy: "RoundRobin"
     replicas:
       - "http://127.0.0.1:8081"
       - "http://127.0.0.1:8082"
   - name: "test service 2"
     matcher: "/api/v2"
+    strategy: "oogaBooga"
     replicas:
       - "http://127.0.0.1:8083"
       - "http://127.0.0.1:8084"

@@ -9,6 +9,8 @@ import (
 	"os"
 
 	config "github.com/pi-rate14/simple-lb/pkg/config"
+	"github.com/pi-rate14/simple-lb/pkg/domain"
+	"github.com/pi-rate14/simple-lb/pkg/strategy"
 	logger "github.com/sirupsen/logrus"
 )
 
@@ -18,8 +20,8 @@ var (
 )
 
 type Vestri struct {
-	Config     *config.Config                // conguration of the app loaded from yaml file
-	ServerList map[string]*config.ServerList // ServerList contains map between matcher and replicas
+	Config            *config.Config                // conguration of the app loaded from yaml file
+	ServiceServersMap map[string]*config.ServerList // ServiceServersMap contains map between service matcher and its replicas
 }
 
 func NewVestri(configuration *config.Config) *Vestri {
@@ -27,7 +29,7 @@ func NewVestri(configuration *config.Config) *Vestri {
 
 	for _, service := range configuration.Services {
 
-		servers := make([]*config.Server, 0)
+		servers := make([]*domain.Server, 0)
 
 		for _, replica := range service.Replicas {
 
@@ -37,22 +39,22 @@ func NewVestri(configuration *config.Config) *Vestri {
 			}
 
 			proxy := httputil.NewSingleHostReverseProxy(replicaURL)
-			servers = append(servers, &config.Server{
+			servers = append(servers, &domain.Server{
 				Url:   replicaURL,
 				Proxy: proxy,
 			})
 		}
 
 		serverMap[service.Matcher] = &config.ServerList{
-			Servers: servers,
-			Current: uint32(0),
-			Name:    service.Name,
+			Servers:  servers,
+			Name:     service.Name,
+			Strategy: strategy.LoadStrategy(service.Strategy),
 		}
 	}
 
 	return &Vestri{
-		Config:     configuration,
-		ServerList: serverMap,
+		Config:            configuration,
+		ServiceServersMap: serverMap,
 	}
 }
 
@@ -69,12 +71,17 @@ func (vestri *Vestri) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nextServer := serverList.Next()
+	nextServer, err := serverList.Strategy.Next(serverList.Servers)
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	// forward request to proxy
-	logger.Infof("Forwarding to the server='%s'", serverList.Servers[nextServer].Url.String())
+	logger.Infof("Forwarding to the server='%s'", nextServer.Url.String())
 
-	serverList.Servers[nextServer].Forward(w, r)
+	nextServer.Forward(w, r)
 }
 
 // findService looks for the first serverList that matches the request path (matcher)
@@ -82,7 +89,7 @@ func (vestri *Vestri) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (vestri *Vestri) findService(path string) (*config.ServerList, error) {
 	logger.Infof("Trying to find matcher for request: %s", path)
 
-	serverList, ok := vestri.ServerList[path]
+	serverList, ok := vestri.ServiceServersMap[path]
 	if !ok {
 		return nil, fmt.Errorf("could not find a matcher for the request '%s'", path)
 	}

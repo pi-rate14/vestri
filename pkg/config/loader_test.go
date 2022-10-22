@@ -10,6 +10,7 @@ func TestLoadConfig(t *testing.T) {
 services:
   - name: "test service"
     matcher: "/api/v1"
+    strategy: "RoundRobin"
     replicas:
     - "localhost:8081"
     - "localhost:8082"
@@ -35,6 +36,10 @@ strategy: "RoundRobin"`))
 		t.Errorf("Expected service name to be 'test service', Got : %s", conf.Services[0].Name)
 	}
 
+	if conf.Services[0].Strategy != "RoundRobin" {
+		t.Errorf("Expected service strategy name to be 'Round Robin', Got : %s", conf.Services[0].Strategy)
+	}
+
 	if len(conf.Services[0].Replicas) != 2 {
 		t.Errorf("Expected service replica count to be 3, Got : %d", len(conf.Services[0].Replicas))
 	}
@@ -46,4 +51,5 @@ strategy: "RoundRobin"`))
 	if conf.Services[0].Replicas[1] != "localhost:8082" {
 		t.Errorf("Expected second service replica to be 'localhost:8082', Got : %s", conf.Services[0].Replicas[1])
 	}
+
 }
