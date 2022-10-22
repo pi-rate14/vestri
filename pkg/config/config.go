@@ -8,9 +8,9 @@ import (
 )
 
 type Service struct {
-	Name     string   `yaml:"name"`     // Name of the service
-	Matcher  string   `yaml:"matcher"`  // prefix matcher to select service based on URL path
-	Replicas []string `yaml:"replicas"` // URLs of the replicas of this service
+	Name     string   `yaml:"name"`     // Name of the service (test-service-1)
+	Matcher  string   `yaml:"matcher"`  // prefix matcher to select service based on URL path (/api/v1)
+	Replicas []string `yaml:"replicas"` // URLs of the replicas of this service (8081, 8082)
 }
 
 /*
@@ -36,6 +36,7 @@ func (s *Server) Forward(w http.ResponseWriter, r *http.Request) {
 }
 
 type ServerList struct {
+	Name    string    // Name of ther service that has this serverList
 	Servers []*Server // List of all the servers
 	Current uint32    // current server to forward the request to.
 
