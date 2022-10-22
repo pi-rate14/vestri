@@ -9,6 +9,7 @@ func TestLoadConfig(t *testing.T) {
 	conf, err := LoadConfig(strings.NewReader(`
 services:
   - name: "test service"
+    matcher: "/api/v1"
     replicas:
     - "localhost:8081"
     - "localhost:8082"
@@ -24,6 +25,10 @@ strategy: "RoundRobin"`))
 
 	if len(conf.Services) != 1 {
 		t.Errorf("Expected service count to be 1, Got : %d", len(conf.Services))
+	}
+
+	if conf.Services[0].Matcher != "/api/v1" {
+		t.Errorf("Expected service matcher to be '/api/v1', Got : %s", conf.Services[0].Matcher)
 	}
 
 	if conf.Services[0].Name != "test service" {
