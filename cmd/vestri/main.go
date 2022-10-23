@@ -33,7 +33,7 @@ func NewVestri(configuration *config.Config) *Vestri {
 
 		for _, replica := range service.Replicas {
 
-			replicaURL, err := url.Parse(replica)
+			replicaURL, err := url.Parse(replica.Url)
 			if err != nil {
 				logger.Fatal(err)
 			}

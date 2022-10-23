@@ -1,0 +1,22 @@
+# Example configuration
+services:
+  - name: "service1"
+    strategy: "WeightedRoundRobin"
+    matcher: "/api/v1"
+    replicas:
+      - url: "http://127.0.0.1:8081"
+        metadata:
+          weight: 10
+      - url: "http://127.0.0.1:8082"
+        metadata:
+          weight: 5
+  - name: "service2"
+    strategy: "RoundRobin"
+    matcher: "/api/v2"
+    replicas:
+      - url: "http://127.0.0.1:8083"
+        metadata:
+          weight: 10
+      - url: "http://127.0.0.1:8084"
+        metadata:
+          weight: 5

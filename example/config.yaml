@@ -1,16 +1,14 @@
 # Example configuration
 services:
-  - name: "test service"
+  - name: service01
+    strategy: WeightedRoundRobin
     matcher: "/api/v1"
-    strategy: "RoundRobin"
     replicas:
-      - "http://127.0.0.1:8081"
-      - "http://127.0.0.1:8082"
-  - name: "test service 2"
+      - url: http://127.0.0.1:8081
+      - url: http://127.0.0.1:8082
+  - name: service02
+    strategy: RoundRobin
     matcher: "/api/v2"
-    strategy: "oogaBooga"
     replicas:
-      - "http://127.0.0.1:8083"
-      - "http://127.0.0.1:8084"
-
-strategy: "RoundRobin"
+      - url: http://127.0.0.1:8083
+      - url: http://127.0.0.1:8084

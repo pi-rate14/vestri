@@ -14,8 +14,9 @@ type DemoServer struct {
 }
 
 func (demoServer *DemoServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	logger.Infof("Recieved Forwarded Request from: %v", r.URL.String())
 	w.WriteHeader(200)
-	w.Write([]byte(fmt.Sprintf("All Good from server %d\n", *port)))
+	w.Write([]byte(fmt.Sprintf("Received Response from port %d\n", *port)))
 }
 
 func main() {
