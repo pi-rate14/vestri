@@ -1,7 +1,7 @@
 # Example configuration
 services:
   - name: service01
-    strategy: WeightedRoundRobin
+    strategy: RoundRobin
     matcher: "/api/v1"
     replicas:
       - url: http://127.0.0.1:8081

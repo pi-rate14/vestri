@@ -6,17 +6,17 @@ services:
     replicas:
       - url: "http://127.0.0.1:8081"
         metadata:
-          weight: 10
+          weight: 2
       - url: "http://127.0.0.1:8082"
         metadata:
-          weight: 5
+          weight: 4
   - name: "service2"
     strategy: "RoundRobin"
     matcher: "/api/v2"
     replicas:
       - url: "http://127.0.0.1:8083"
         metadata:
-          weight: 10
+          weight: 2
       - url: "http://127.0.0.1:8084"
         metadata:
           weight: 5

@@ -10,6 +10,7 @@ import (
 
 	config "github.com/pi-rate14/simple-lb/pkg/config"
 	"github.com/pi-rate14/simple-lb/pkg/domain"
+	"github.com/pi-rate14/simple-lb/pkg/health"
 	"github.com/pi-rate14/simple-lb/pkg/strategy"
 	logger "github.com/sirupsen/logrus"
 )
@@ -40,16 +41,28 @@ func NewVestri(configuration *config.Config) *Vestri {
 
 			proxy := httputil.NewSingleHostReverseProxy(replicaURL)
 			servers = append(servers, &domain.Server{
-				Url:   replicaURL,
-				Proxy: proxy,
+				Url:      replicaURL,
+				Proxy:    proxy,
+				Metadata: replica.Metadata,
 			})
+		}
+
+		healthChecker, err := health.NewHealthChecker(servers)
+		if err != nil {
+			logger.Fatal(err)
 		}
 
 		serverMap[service.Matcher] = &config.ServerList{
 			Servers:  servers,
 			Name:     service.Name,
 			Strategy: strategy.LoadStrategy(service.Strategy),
+			Checker:  healthChecker,
 		}
+	}
+
+	// Start haelth checker for each Services
+	for _, serverList := range serverMap {
+		go serverList.Checker.Start()
 	}
 
 	return &Vestri{
@@ -62,6 +75,7 @@ func (vestri *Vestri) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// for each service, read request path host:port/remaining/url
 	// and load balance it to service named "service" with url host[i]:port[i]/remaining/url
+	fmt.Printf("\n")
 	logger.Infof("Received New Request: url='%s'", r.Host)
 
 	serverList, err := vestri.findService(r.URL.Path)
@@ -79,7 +93,7 @@ func (vestri *Vestri) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// forward request to proxy
-	logger.Infof("Forwarding to the server='%s'", nextServer.Url.String())
+	logger.Infof("Forwarding to the server='%s'", nextServer.Url.Host)
 
 	nextServer.Forward(w, r)
 }
@@ -111,7 +125,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-
+	// fmt.Printf("%v", config)
 	vestri := NewVestri(config)
 
 	server := http.Server{

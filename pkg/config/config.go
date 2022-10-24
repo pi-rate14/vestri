@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/pi-rate14/simple-lb/pkg/domain"
+	"github.com/pi-rate14/simple-lb/pkg/health"
 	"github.com/pi-rate14/simple-lb/pkg/strategy"
 )
 
@@ -20,4 +21,5 @@ type ServerList struct {
 	Name     string                     // Name of ther service that has this serverList
 	Servers  []*domain.Server           // List of all the servers
 	Strategy strategy.BalancingStrategy // how this serverlist will be load balanced. Defaults to round robin
+	Checker  *health.HealthChecker
 }
